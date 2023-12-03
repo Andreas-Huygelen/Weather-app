@@ -13,14 +13,18 @@ import HelloWorld from './components/HelloWorld.vue'
       <nav>
         <RouterLink to="/">Home</RouterLink>
         <RouterLink to="/about">About</RouterLink>
+        <RouterLink to="/search">Search</RouterLink>
+        <RouterLink to="/list">List</RouterLink>
       </nav>
     </div>
   </header>
 
   <RouterView />
+  
 </template>
 
 <style scoped>
+
 header {
   line-height: 1.5;
   max-height: 100vh;
@@ -68,7 +72,6 @@ nav a:first-of-type {
   }
 
   header .wrapper {
-    display: flex;
     place-items: flex-start;
     flex-wrap: wrap;
   }
