@@ -45,6 +45,10 @@ export default {
     addWeatherMarker(location, weatherData) {
       const marker = L.marker([location.lat, location.lon]).addTo(this.map);
       const content = `
+      
+        <div class="flag">
+          <img src="https://flagsapi.com/${weatherData.sys.country}/flat/64.png" alt="weatherData.sys.country">
+        </div>
         <h2>${location.name}</h2>
         <p>${weatherData.weather[0].description}</p>
         <img src="https://openweathermap.org/img/wn/${weatherData.weather[0].icon}.png" alt="Weather Icon" />
@@ -61,5 +65,9 @@ export default {
 /* Add any necessary styles for your map container here */
 #map {
   height: 400px;
+}
+
+.flag img {
+  box-shadow: 0 0 4px rgba(0, 0, 0, 0.2);
 }
 </style>
