@@ -1,64 +1,76 @@
 <template>
-  <div>
-    <div ref="map" style="height: 600px;"></div>
+  <select v-model="selectedStyle">
+      <option value="purpleYellow.point">Purple Yellow Points</option>
+      <option value="glacier.point">Glacier Points</option>
+      <!-- Voeg meer opties toe voor verschillende stijlen -->
+    </select>
+  <div class="container">
+    <l-map style="height: 400px;" class="leaflet" :zoom="zoom" :center="center">
+      <l-tile-layer :url="baseTileLayerUrl" :attribution="baseTileLayerAttribution" />
+      <l-tile-layer :url="overlay" :attribution="overlayAttribution" />
+    </l-map>
   </div>
 </template>
 
 <script>
-import L from 'leaflet';
-import 'leaflet.heat';
-import axios from 'axios';
-
+import { LMap, LTileLayer } from '@vue-leaflet/vue-leaflet';
+import 'leaflet/dist/leaflet.css';
+import { ref } from 'vue';
+import { useRoute } from 'vue-router';
+//https://www.gbif.org/developer/maps
 export default {
+  components: {
+    LMap,
+    LTileLayer,
+  },
   data() {
     return {
-      map: null,
-        apiKey: import.meta.env.VITE_API_URL,
-      locations: [],
+      zoom: 3,
+      center: [30, 20],
+      baseTileLayerUrl: 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',
+      baseTileLayerAttribution: '&copy; <a href="http://osm.org/copyright">OpenStreetMap</a> contributors',
+      overlay: '',
+      overlayAttribution: '&copy; <a href="http://osm.org/copyright">OpenStreetMap</a> contributors',
+      selectedStyle: 'purpleYellow.point',
     };
   },
-  mounted() {
-    this.initMap();
-    this.getWeatherForLocations();
-  },
-  methods: {
-    initMap() {
-      this.map = L.map(this.$refs.map).setView([0, 0], 2);
+  setup() {
+    const route = useRoute();
+    const selectedStyle = ref('purpleYellow.point');
+    
+    console.log(selectedStyle)
+    // Logic to set map style based on route or other conditions
+    const mapStyle = selectedStyle.value;
+    // Constructing params string
+    console.log(mapStyle)
+    const params = [
+      { name: 'style', value: mapStyle },
+      { name: 'taxonKey', value: route.query.taxonKey },
+      { name: 'country', value: route.query.country },
+    ]
+      .filter(param => Boolean(param.value))
+      .map(param => `${param.name}=${param.value}`)
+      .join('&');
+      
+    // Constructing overlay URL
+    const overlay = `https://api.gbif.org/v2/map/occurrence/density/{z}/{x}/{y}@1x.png?${params}`;
 
-      L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-        attribution: 'Map data &copy; <a href="https://www.openstreetmap.org/">OpenStreetMap</a> contributors',
-        maxZoom: 18,
-      }).addTo(this.map);
-    },
-    async getWeatherForLocations() {
-      try {
-        const response = await axios.get(`https://api.openweathermap.org/data/2.5/box/city?bbox=3.43,51.13,5.55,51.39,9&appid=${this.apiKey}&units=metric`);
-
-        const locations = response.data.list;
-
-    const heatData = locations.map(location => {
-      return [location.coord.Lat, location.coord.Lon, location.main.temp];
-    });
-    this.locations = locations;
-    this.createHeatmap(heatData);
-      } catch (error) {
-        console.error(error);
-      }
-    },
-    createHeatmap(heatData) {
-    console.log(heatData);
-      const heat = L.heatLayer(heatData, {
-        radius: 15,
-        maxZoom: 10,
-        gradient: {0.4: 'blue', 0.6: 'cyan', 0.7: 'lime', 0.8: 'yellow', 1.0: 'red'},
-      }).addTo(this.map);
-    },
+    return {
+      overlay,
+    };
   },
 };
 </script>
 
 <style>
-#map {
-  height: 600px;
+.container {
+  position: relative;
+  flex: 1;
+}
+.leaflet {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 100%;
 }
 </style>
